@@ -1,0 +1,61 @@
+<html>
+    <head>
+		<title>Welcome to Your Home Page</title>
+		<link href="{{ STATIC_URL }}css/style.css" rel="stylesheet" type="text/css" />
+    </head>    
+    <body>
+	<center>
+	<div id="heading">
+	  <h1>Welcome to Cooperative Bank Of India</h1>
+	</div>
+	</center>
+	<hr>
+	<center>
+		<table width="80%">
+			<tr id="tabletTopRow">
+				<td>
+				</td>
+				<td align="left">
+	 				 <span style="color:green">Welcome<b> Mr {{request.session.user_id}}</b></span>
+				</td>
+				<td align= "center">
+					<a href="/logout/">Logout</a> 
+				</td>
+			</tr>
+			<tr>
+			</tr>
+			<tr>	
+				<td>
+					<ul>
+    					<li><a href="/funds_transfer/">Funds Transfer(Own Accounts)</a></li>
+    				</ul>
+    			</td>
+    			<td>
+    				<b>Lets you transfer fund within your own accounts.</b>
+    			</td>
+    		</tr>
+    		<tr>
+    			<td>
+    				<ul>		
+    					<li><a href="/interbank_transfer2/">Interbank Transfer</a></li>
+    				<ul>
+    			</td>
+    			<td>
+    				<b>Lets you transfer money from your account to any other bank account.</b>
+    			</td>
+    		</tr>
+    		<tr>			
+    			<td>
+    				<ul>
+    					<li><a href="/third_party_transfer/"> Third Party Transfer</a></li>
+  					</ul>
+  				</td>
+  				<td>
+    				<b>Lets you transfer fund to other accounts of Cooperative Bank of India. </b>
+    			</td>
+			</tr>
+		</table>
+	</center>	
+	<hr>
+    </body>
+</html>

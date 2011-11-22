@@ -1,0 +1,37 @@
+<html>
+    <head>
+		<title>Funds Transfer</title>
+		<link href="{{ STATIC_URL }}css/style.css" rel="stylesheet" type="text/css" />
+    </head>
+    <body>
+    <center>
+	  <h1>Welcome to Cooperative Bank Of India</h1>
+	</center>
+	<table align = "center" width="80%" bgcolor="FFF6FF">
+		<tr>
+			<td><a href="/funds_transfer/">Funds Transfer(Own Accounts)</a></td>
+			<td><a href="/interbank_transfer2/">Interbank Transfer</a></td>
+			<td><a href="/third_party_transfer/"> Third Party Transfer</a></td>
+			<td><a href="/logout/">Logout</td>
+		</tr>
+	</table>
+	<hr>
+	<center>
+	<table>
+	<tr>Select the type of transaction</tr>
+	<tr>
+		<form name="transaction_type" action="/interbank_transfer/" method="post">
+		{% csrf_token %}
+		<td>
+			<input type="radio" name="tr_type" value="NEFT" /> NEFT
+		</td>
+		<td>
+			<input type="radio" name="tr_type" value="RTGS" /> RTGS
+		</td>
+	</tr>
+	</table>
+		<input type="submit" value="Proceed" />
+		</form>
+	</center>
+    </body>
+</html>

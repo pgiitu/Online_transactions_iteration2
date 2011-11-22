@@ -1,0 +1,202 @@
+<html>
+    <head>
+		<title>Funds Transfer</title>
+		<link href="{{ STATIC_URL }}css/style.css" rel="stylesheet" type="text/css" />
+    </head>
+    
+    <body>
+    <center>
+	  <h1>Welcome to Cooperative Bank Of India</h1>
+	</center>
+	<table align = "center" width="80%" bgcolor="FFF6FF">
+		<tr>
+			<td><a href="/funds_transfer/">Funds Transfer(Own Accounts)</a></td>
+			<td><a href="/interbank_transfer2/">Interbank Transfer</a></td>
+			<td><a href="/third_party_transfer/"> Third Party Transfer</a></td>
+			<td><a href="/logout/">Logout</td>
+		</tr>
+	</table>
+	<hr>
+	<center>
+	<!--table border="5%" bgcolor="F9999F" width="80%">
+				<h2> These are your Accounts </h2>
+		<tr>
+			<td align="center">
+				<b> Account Number</b>
+			</td>
+			<td align="center">
+				<b>Balance</b>
+			</td>
+			<td align="center">
+				<b>Account Type</b>
+			</td>
+		</tr>
+		{% if user_accounts %}
+	     {% for account in user_accounts %}
+		 <tr>
+		      <td align="center">
+					{{ account.ba_acc_no }}
+		      </td>
+		      <td align="center">
+					{{ account.ba_acc_bal }}
+			  </td>
+		      {% if account.ba_acc_type == 1 %}
+		      		<td align="center">Savings Account</td>
+		      {% endif %}
+		      {% if account.ba_acc_type == 2 %}
+		      		<td align="center">Current Account</td>
+		      {% endif %}
+	   </tr>
+	    {% endfor %}
+	  {% endif %}
+	  
+	</table-->
+	</br>
+	</br>
+	
+	{% if connected_accounts %}
+		<form action= "/third_party_transfer/" name="third_party" method="post" onsubmit="return validate()">
+		{% csrf_token %}
+	<b>Select Source Account</b>
+	<table width ="80%" bgcolor="FFFFFF"> 
+	{% if user_accounts %}
+		<tr>
+		    <td align="center">
+		    </td>
+			<td align="center">
+				<b> Account Number</b>
+			</td>
+			<td align="center">
+				<b>Balance</b>
+			</td>
+			<td align="center">
+				<b>Account Type</b>
+			</td>
+		</tr>
+	    {% for account in user_accounts %}
+		<tr>
+			<td>
+				<input type="radio" name="account1" id="a{{ forloop.counter }}" value="{{account.ba_acc_no}}"/>
+			</td>
+			<td align="center">
+			{{ account.ba_acc_no  }}
+			</td>
+			<td align="center">
+					{{ account.ba_acc_bal }}
+			</td>
+		    {% if account.ba_acc_type == 1 %}
+		      		<td align="center">savings Account</td>
+		    {% endif %}
+		    {% if account.ba_acc_type == 2 %}
+		      		<td align="center">Current Account</td>
+		    {% endif %}
+		</tr>	
+		{% endfor%}
+		</table>
+	{% endif %}	
+		</br>
+		</br>
+		<b>Select Destination Account(Connected Accounts)</b>
+	
+		<table align="center" width="80%" bgcolor="FFFFFF">	
+			<tr>
+			    <td align="center">
+			    </td>
+				<td align="center">
+					<b> Account Number</b>
+				</td>
+				<td align="center">
+					<b>Trasfer Limit</b>
+				</td>
+				<td align="center">
+					<b>IFSC Code</b>
+				</td>
+			</tr>
+	    	{% for account in connected_accounts %}
+			<tr>
+				<td><input type="radio" name="account2" id="b{{ forloop.counter }}" value="{{ account.ca_connected_acc_no}}" />
+				</td>
+				<td align="center">
+				{{account.ca_connected_acc_no}}
+				</td>
+				<td align="center">
+					{{account.ca_transfer_limit}}
+				</td>
+		    	<td align="center">	
+		    		{{account.ca_ifsc_code}}
+		    	</td>	
+			</tr>	
+			{% endfor %}
+	</table>
+	</br>
+	<table style="position:absolute;left:35%">
+	 <tr><td>Enter amount to be transferred: </td><td><input type="text" name="amount_to_transfer" id="amount" onBlur="check_amount()"/></td><td><msg style="color:red" id="msg_amount">Field Empty</msg><br/></tr>
+	 </table></br></br>
+
+	<input type="submit" value="Transfer Fund" /></br><msg style="color:red" id="msg_submit">{{error}}</msg>
+	</form>
+	 {% endif %}		  
+	</center>
+	<b><a href="/add_third_party/">Add Third Party Accounts</a></b>
+	<hr>
+<script type="text/javascript">
+var error=true;
+	function check_amount(){
+		var name=document.getElementById("amount");
+		var message=document.getElementById("msg_amount");
+		value=name.value;
+		if(value=="")
+			{message.innerHTML="Field Empty";error=true;}
+		else if(numeric(value)==false)
+			{message.innerHTML="Please enter numeric only";error=true;}
+		else
+			{message.innerHTML="";error=false;}
+	}
+
+	function numeric(alphane)
+	{
+	var numaric = alphane;
+	for(var j=0; j<numaric.length; j++)
+		{
+		  var alphaa = numaric.charAt(j);
+		  var hh = alphaa.charCodeAt(0);
+		  if(hh > 47 && hh<58 || (alphaa=='.'))
+		  {
+		  }
+		else	{
+                         //alert("Your Alpha Numeric Test Failed");
+			 return false;
+		  }
+ 		}
+ 		//alert("Your Alpha Numeric Test Passed");
+ 		return true;
+	}
+
+	function check_accounts_selection(){
+		var in1=-1;
+		var in2=-1;
+		for (in1=0; in1< document.inter_bank_transfer.account1.length; in1++) {
+			if (document.inter_bank_transfer.account1[in1].checked) {
+				break;
+			}
+		}
+		for (in2=0; in2< document.inter_bank_transfer.account1.length; in2++) {
+			if (document.inter_bank_transfer.account1[in2].checked) {
+				break;
+			}
+		}
+		if(in1==document.inter_bank_transfer.account1.length || in2==document.inter_bank_transfer.account1.length)
+			return false;
+		else if(in1==-1 || in2==-1)
+			return false;
+		else
+			return true;		
+	}
+	function validate(){
+		if(error==true || check_accounts_selection()==false)
+			return false;
+		else return true;
+	}
+</script>
+    </body>
+</html>

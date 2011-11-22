@@ -1,0 +1,84 @@
+<html>
+    <head>
+		<title>Payment for Goods and Services</title>
+		<link href="{{ STATIC_URL }}css/style.css" rel="stylesheet" type="text/css" />
+    </head>
+    
+    <body>
+    <center>
+	  <h1>Welcome to Cooperative Bank Of India</h1>
+	</center>
+	<table align = "center" width="80%" bgcolor="FFF6FF">
+		<tr>
+			<td><a href="/funds_transfer/">Funds Transfer(Own Accounts)</a></td>
+			<td><a href="/interbank_transfer2/">Interbank Transfer</a></td>
+			<td><a href="/third_party_transfer/"> Third Party Transfer</a></td>
+			<td><a href="/logout/">Logout</td>
+		</tr>
+	</table>
+	<hr>
+	<center>
+	<table border="5%" bgcolor="F9999F" width="75%">
+				<h2> These are your Accounts </h2>
+		<tr>
+			<td align="center">
+				<b> Account Number</b>
+			</td>
+			<td align="center">
+				<b>Balance</b>
+			</td>
+			<td align="center">
+				<b>Account Type</b>
+			</td>
+		</tr>
+		{% if user_accounts %}
+	     {% for account in user_accounts %}
+		 <tr>
+		      <td align="center">
+					{{ account.ba_acc_no }}
+		      </td>
+		      <td align="center">
+					{{ account.ba_acc_bal }}
+			  </td>
+		      {% if account.ba_acc_type == 1 %}
+		      		<td align="center">savings Account</td>
+		      {% endif %}
+		      {% if account.ba_acc_type == 2 %}
+		      		<td align="center">Current Account</td>
+		      {% endif %}
+	   </tr>
+	    {% endfor %}
+	  {% endif %}
+	  
+	</table>
+	</br>
+	</br>
+	<form action= "/complete_payment_goods/" name="payment og goods and services" method="post">
+	<table width ="75%" bgcolor="FFFFFF" border="3%"> 
+			{% csrf_token %}
+		<tr><td>
+				<b>Select Source Account(Your own account)</b>
+		</td></tr>
+	    	{% for account in user_accounts %}
+				<tr><td><input type="radio" name="account1" id="account{{ forloop.counter }}" value="{{ account.ba_acc_no }}" />{{ account.ba_acc_no  }}</td></tr>
+			{% endfor %}
+		<tr></tr>
+		<tr><td>
+			<b>Payment Details</b>
+		</td></tr>
+		<tr>
+		    <td> Reference Number</td> <td> {{request.session.ref_no}}</td>
+		</tr>
+		<tr>
+		    <td> Amount</td> <td> {{request.session.amount}}</td>
+		</tr>
+
+	</table>
+	<input type="submit" value="Click To Confirm The Payment" /><msg style="color:red" id="msg_submit">{{error}}</msg>
+	</form>
+	</br>
+	
+	</center>
+	<hr>
+    </body>
+</html>
