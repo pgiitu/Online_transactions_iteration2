@@ -109,7 +109,7 @@ def show_funds_transfer(request):
 	    error2="Please enter valid amount"
 	    error3="Please enter amount in numeric only"
 	    error4="Please choose different source and destination accounts" 
-	    error5="You entered amount more than your account's transaction limit"
+	    error5="You entered amount more than your accounts transaction limit"
 	    if (source_acc==destination_acc):
 	    	return render_to_response("funds_transfer.html",{'user_accounts':user_accounts,'error':error4,'STATIC_URL':"/static/"})	
 	    try:
@@ -191,8 +191,8 @@ def show_interbank_transfer(request):
 	    error2="Please enter valid amount"
 	    error3="Please enter amount in numeric only"
 	    error4="Please choose different source and destination accounts" 
-	    error5="You entered amount more than your account's transaction limit"
-	    error6="You entered amount more than connected account's transaction limit"
+	    error5="You entered amount more than your accounts transaction limit"
+	    error6="You entered amount more than connected accounts transaction limit"
 	    try:
 	    	i = float(amount)
 	    except ValueError, TypeError:
@@ -355,8 +355,8 @@ def show_thirdparty_transfer(request):
     error2="Please enter valid amount"
     error3="Please enter amount in numeric only"
     error4="Please choose different source and destination accounts" 
-    error5="You entered amount more than your account's transaction limit"
-    error6="You entered amount more than connected account's transaction limit"
+    error5="You entered amount more than your accounts transaction limit"
+    error6="You entered amount more than connected accounts transaction limit"
     try:
     	i = float(amount)
     except ValueError, TypeError:
@@ -489,8 +489,8 @@ def transfer_goods(request):
 	    account1=Bank_Account.objects.filter(ba_acc_no=source_acc)
 	    error1="Not enough money in your account"
 	    error2="Please enter valid amount"
-	    error5="You entered amount more than your account's transaction limit"
-	    error6="You entered amount more than connected account's transaction limit"
+	    error5="You entered amount more than your accounts transaction limit"
+	    error6="You entered amount more than connected accounts transaction limit"
 	    i = float(amount)
 #	    print "everything ok  \n"
 #	    try:
