@@ -84,7 +84,10 @@ def verify_sms(request):
 		request.session['verification']=1
 	        id1=request.session.get('user_id')
 	        user_accounts = Bank_Account.objects.filter(ba_user_id=id1)
-	        connected_accounts = Connected_Account_Interbank.objects.filter(ca_host_acc_no=id1)
+		if t_type=="interbank_transfer.html":
+		    connected_accounts = Connected_Account_Interbank.objects.filter(ca_host_acc_no=id1)
+		else:
+		    connected_accounts=Connected_Account.objects.filter(ca_host_acc_id=id1)
 		return render_to_response(t_type,{'user_accounts':user_accounts,'connected_accounts':connected_accounts,'error':"",'STATIC_URL':"/static/"})
 	  else:
 		return render_to_response("sms_verification.html",{'error':"confirmation unsuccessful",'STATIC_URL':"/static/"})
@@ -377,7 +380,9 @@ def show_thirdparty_transfer(request):
 	    #print "\n\n\n"
 	    #print id1
 	    #print "\n\n\n"
+	    print destination_acc
 	    account2=Connected_Account.objects.filter(ca_connected_acc_no=destination_acc)#,ca_host_acc_id=id1) 	# RECHECK AGAIN the condition
+	    print "jij"
 	    #ifsc_code1=account2.ca_ifsc
 	    error1="Not enough money in your account"
 	    error2="Please enter valid amount"
