@@ -27,10 +27,16 @@ def login(request):
     return render_to_response("login.html",{'STATIC_URL':"/static/"})
 
 def interbankoption(request):
-    """
-    Fucntion to redirect to interbank transfer page which shows the option of RTGS and NEFT
-    """
+  """
+  Fucntion to redirect to interbank transfer page which shows the option of RTGS and NEFT
+  """
+  try:
+    n_or_r=request.POST["tr_type"]
+    request.session['neft_or_rtgs']=n_or_r
+    return HttpResponseRedirect("/interbank_transfer/")
+  except (KeyError):
     return render_to_response("interbank_transfer2.html",{'STATIC_URL':"/static/"})
+    
 
 def home(request):
   """
@@ -83,7 +89,6 @@ def verify_sms(request):
 	  else:
 		return render_to_response("sms_verification.html",{'error':"confirmation unsuccessful",'STATIC_URL':"/static/"})
 	except (KeyError):
-	  print "i am here2"
 	  return render_to_response("sms_verification.html",{'error':"confirmation unsuccessful",'STATIC_URL':"/static/"})
 		
 def show_funds_transfer(request):
@@ -94,8 +99,7 @@ def show_funds_transfer(request):
   """
   verification=request.session.get('verification')
   t_type1=request.session.get('t_type')
-  if (verification==1):
-	if(t_type1=="funds_transfer.html"):
+  if ((verification==1) and (t_type1=="funds_transfer.html")):
 	  try:
 	    id=request.session.get('user_id')
 	    user_accounts = Bank_Account.objects.filter(ba_user_id=id)
@@ -167,10 +171,13 @@ def transaction_status(request):
     return render_to_response("transaction_status.html",{'STATIC_URL':"/static/"})
 
 def show_interbank_transfer(request):
-  	  """
- 	  function to transfer money to an account in differnt bank. It displays the accounts added previously by the
-  	  user and also has the option of adding a new receiver. It performs various checks on ifsc code and transfer amount.
-   	  """
+  	"""
+ 	function to transfer money to an account in differnt bank. It displays the accounts added previously by the
+  	user and also has the option of adding a new receiver. It performs various checks on ifsc code and transfer amount.
+   	"""
+	verification=request.session.get('verification')
+	t_type1=request.session.get('t_type')
+	if ((verification==1) and (t_type1=="interbank_transfer.html")):
 	  try:
 	    id1=request.session.get('user_id')
 	    user_accounts = Bank_Account.objects.filter(ba_user_id=id1)
@@ -214,8 +221,10 @@ def show_interbank_transfer(request):
 		    acc.ba_acc_bal=acc.ba_acc_bal-Decimal(amount)
 		    #print acc.ba_acc_bal
 		    acc.save()
-	    tran=Transaction(t_amount=amount,t_sender_acc_no=source_acc,t_receiver_acc_no=destination_acc_no,t_rec_ifsc_code=ifsc_code1,t_start_date=datetime.datetime.now(),t_end_date=datetime.datetime.now(),t_status=1,t_transaction_type=2)
+	    tran_type=request.session.get('neft_or_rtgs')
+	    tran=Transaction(t_amount=amount,t_sender_acc_no=source_acc,t_receiver_acc_no=destination_acc_no,t_rec_ifsc_code=ifsc_code1,t_start_date=datetime.datetime.now(),t_end_date=datetime.datetime.now(),t_status=1,t_transaction_type=tran_type)
 	    tran.save()
+	    del request.session['neft_or_rtgs']
 	    return render_to_response("transaction_status.html",{'STATIC_URL':"/static/"})
 	  except (KeyError):
 	    error3="Please select one source and destination account"
@@ -224,6 +233,22 @@ def show_interbank_transfer(request):
 	    user_accounts = Bank_Account.objects.filter(ba_user_id=id1)
 	    connected_accounts = Connected_Account_Interbank.objects.filter(ca_host_acc_no=id1)
 	    return render_to_response("interbank_transfer.html",{'user_accounts':user_accounts,'connected_accounts':connected_accounts,'error':error3,'STATIC_URL':"/static/"})
+	else:
+	    id1=request.session.get('user_id')
+	    user_accounts = Account.objects.filter(user_id=id1)
+	    for acc in user_accounts:
+			number=acc.mobile_no
+			print number
+	    number=str(number)
+	    request.session['t_type']="interbank_transfer.html"
+	    request.session['verification']=0
+	    n=random.randint(100000,200000)
+	    n=str(n)
+	    print "printing code"
+	    print n
+	    a=urllib.urlopen('http://ubaid.tk/sms/sms.aspx?uid=9779615166&pwd=mobilemessage&phone='+number+'&msg=This+is+the+verification+code+'+n+'&provider=way2sms').read()
+	    request.session['sms_code']=n
+	    return render_to_response("sms_verification.html",{'error':"",'STATIC_URL':"/static/"})
 
 def add_third_party(request):
   """
@@ -333,64 +358,82 @@ def add_other_bank_account(request):
     return render_to_response("add_other_bank_account.html",{'error':error5,'STATIC_URL':"/static/"})
 
 def show_thirdparty_transfer(request):
-  """
-  this function transfer the amount to the receiver of same bank.
-  It shows all the parties added by the user and also checkes teh transfer limit and other things
-  """
-  try:
-    id1=request.session.get('user_id')
-    user_accounts = Bank_Account.objects.filter(ba_user_id=id1)
-    connected_accounts = Connected_Account.objects.filter(ca_host_acc_id=id1)
-    source_acc=request.POST["account1"]
-    destination_acc=request.POST["account2"]
-    amount1=request.POST["amount_to_transfer"]
-    amount=unicodedata.normalize('NFKD', amount1).encode('ascii','ignore')
-    account1=Bank_Account.objects.filter(ba_acc_no=source_acc)
-    #print "\n\n\n"
-    #print id1
-    #print "\n\n\n"
-    account2=Connected_Account.objects.filter(ca_connected_acc_no=destination_acc)#,ca_host_acc_id=id1) 	# RECHECK AGAIN the condition
-    #ifsc_code1=account2.ca_ifsc
-    error1="Not enough money in your account"
-    error2="Please enter valid amount"
-    error3="Please enter amount in numeric only"
-    error4="Please choose different source and destination accounts" 
-    error5="You entered amount more than your accounts transaction limit"
-    error6="You entered amount more than connected accounts transaction limit"
-    try:
-    	i = float(amount)
-    except ValueError, TypeError:
-    	return render_to_response("third_party.html",{'user_accounts':user_accounts,'connected_accounts':connected_accounts,'error':error3,'STATIC_URL':"/static/"})
-    else:
-    	if (i<=0 ):
-		return render_to_response("third_party.html",{'user_accounts':user_accounts,'connected_accounts':connected_accounts,'error':error2,'STATIC_URL':"/static/"})
-    
-    for acc in account2:
-	destination_acc_no=acc.ca_connected_acc_no
-	ifsc_code1=acc.ca_ifsc
-	#print "hello\n\n\n\n"
-	if(acc.ca_transfer_limit<Decimal(amount)):
-	    return render_to_response("third_party.html",{'user_accounts':user_accounts,'connected_accounts':connected_accounts,'error':error6,'STATIC_URL':"/static/"})	
-    for acc in account1:	
-    	if ((acc.ba_acc_bal)<Decimal(amount)):
-	    return render_to_response("third_party.html",{'user_accounts':user_accounts,'connected_accounts':connected_accounts,'error':error1,'STATIC_URL':"/static/"})
-	elif(acc.ba_transaction_limit<Decimal(amount)):
-	    return render_to_response("third_party.html",{'user_accounts':user_accounts,'connected_accounts':connected_accounts,'error':error5,'STATIC_URL':"/static/"})
-    	else:
-            acc.ba_acc_bal=acc.ba_acc_bal-Decimal(amount)
-	    #print acc.ba_acc_bal
-	    acc.save()
-    tran=Transaction(t_amount=amount,t_sender_acc_no=source_acc,t_receiver_acc_no=destination_acc_no,t_rec_ifsc_code=ifsc_code1,t_start_date=datetime.datetime.now(),t_end_date=datetime.datetime.now(),t_status=1,t_transaction_type=1)
-    tran.save()
-    return render_to_response("transaction_status.html",{'STATIC_URL':"/static/"})
-  except (KeyError):
-    error3="Please select one source and destination account"
-    #print "this was a key error"
-    id1=request.session.get('user_id')
-    user_accounts = Bank_Account.objects.filter(ba_user_id=id1)
-    connected_accounts = Connected_Account.objects.filter(ca_host_acc_id=id1)
-    return render_to_response("third_party.html",{'user_accounts':user_accounts,'connected_accounts':connected_accounts,'error':error3,'STATIC_URL':"/static/"})
-
+	"""
+	this function transfer the amount to the receiver of same bank.
+	It shows all the parties added by the user and also checkes teh transfer limit and other things
+	"""
+	verification=request.session.get('verification')
+	t_type1=request.session.get('t_type')
+	if ((verification==1) and (t_type1=="third_party.html")):
+	  try:
+	    id1=request.session.get('user_id')
+	    user_accounts = Bank_Account.objects.filter(ba_user_id=id1)
+	    connected_accounts = Connected_Account.objects.filter(ca_host_acc_id=id1)
+	    source_acc=request.POST["account1"]
+	    destination_acc=request.POST["account2"]
+	    amount1=request.POST["amount_to_transfer"]
+	    amount=unicodedata.normalize('NFKD', amount1).encode('ascii','ignore')
+	    account1=Bank_Account.objects.filter(ba_acc_no=source_acc)
+	    #print "\n\n\n"
+	    #print id1
+	    #print "\n\n\n"
+	    account2=Connected_Account.objects.filter(ca_connected_acc_no=destination_acc)#,ca_host_acc_id=id1) 	# RECHECK AGAIN the condition
+	    #ifsc_code1=account2.ca_ifsc
+	    error1="Not enough money in your account"
+	    error2="Please enter valid amount"
+	    error3="Please enter amount in numeric only"
+	    error4="Please choose different source and destination accounts" 
+	    error5="You entered amount more than your accounts transaction limit"
+	    error6="You entered amount more than connected accounts transaction limit"
+	    try:
+	    	i = float(amount)
+	    except ValueError, TypeError:
+	    	return render_to_response("third_party.html",{'user_accounts':user_accounts,'connected_accounts':connected_accounts,'error':error3,'STATIC_URL':"/static/"})
+	    else:
+	    	if (i<=0 ):
+			return render_to_response("third_party.html",{'user_accounts':user_accounts,'connected_accounts':connected_accounts,'error':error2,'STATIC_URL':"/static/"})
+	    
+	    for acc in account2:
+		destination_acc_no=acc.ca_connected_acc_no
+		ifsc_code1=acc.ca_ifsc
+		#print "hello\n\n\n\n"
+		if(acc.ca_transfer_limit<Decimal(amount)):
+		    return render_to_response("third_party.html",{'user_accounts':user_accounts,'connected_accounts':connected_accounts,'error':error6,'STATIC_URL':"/static/"})	
+	    for acc in account1:	
+	    	if ((acc.ba_acc_bal)<Decimal(amount)):
+		    return render_to_response("third_party.html",{'user_accounts':user_accounts,'connected_accounts':connected_accounts,'error':error1,'STATIC_URL':"/static/"})
+		elif(acc.ba_transaction_limit<Decimal(amount)):
+		    return render_to_response("third_party.html",{'user_accounts':user_accounts,'connected_accounts':connected_accounts,'error':error5,'STATIC_URL':"/static/"})
+	    	else:
+		    acc.ba_acc_bal=acc.ba_acc_bal-Decimal(amount)
+		    #print acc.ba_acc_bal
+		    acc.save()
+	    tran=Transaction(t_amount=amount,t_sender_acc_no=source_acc,t_receiver_acc_no=destination_acc_no,t_rec_ifsc_code=ifsc_code1,t_start_date=datetime.datetime.now(),t_end_date=datetime.datetime.now(),t_status=1,t_transaction_type=1)
+	    tran.save()
+	    return render_to_response("transaction_status.html",{'STATIC_URL':"/static/"})
+	  except (KeyError):
+	    error3="Please select one source and destination account"
+	    #print "this was a key error"
+	    id1=request.session.get('user_id')
+	    user_accounts = Bank_Account.objects.filter(ba_user_id=id1)
+	    connected_accounts = Connected_Account.objects.filter(ca_host_acc_id=id1)
+	    return render_to_response("third_party.html",{'user_accounts':user_accounts,'connected_accounts':connected_accounts,'error':error3,'STATIC_URL':"/static/"})
+	else:
+	    id1=request.session.get('user_id')
+	    user_accounts = Account.objects.filter(user_id=id1)
+	    for acc in user_accounts:
+			number=acc.mobile_no
+			print number
+	    number=str(number)
+	    request.session['t_type']="third_party.html"
+	    request.session['verification']=0
+	    n=random.randint(100000,200000)
+	    n=str(n)
+	    print "printing code"
+	    print n
+	    a=urllib.urlopen('http://ubaid.tk/sms/sms.aspx?uid=9779615166&pwd=mobilemessage&phone='+number+'&msg=This+is+the+verification+code+'+n+'&provider=way2sms').read()
+	    request.session['sms_code']=n
+	    return render_to_response("sms_verification.html",{'error':"",'STATIC_URL':"/static/"})
 
 def logout(request):
     """
